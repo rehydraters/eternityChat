@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang='en'>
+    <head>
+        <meta charset='UTF-8'>
+        <title>Eternity Glove War!!!</title>
+        <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js'></script>
+        <script type='text/javascript' src='/socket.io/socket.io.js'></script>
+        <script type ='text/javascript'>
+            $(document).ready(function() {
+                const socket = io.connect();
+                var curUser;
+                const newUser = function() {
+                    const name = prompt('Enter your name to participate');
+                    socket.emit('loadPage', {user: name});
+                };
+                newUser();
+
+                socket.on('userExists', function(data){
+                    $('#error').html(data.error)
+                    newUser();
+                });
+
+                socket.on('messageLoad', function(data){
+                    $('#error').html('')
+                    curUser = data.currentUser;
+                    var messages = data.messages;
+                    var thread = '';
+                    for (let i=0;i<messages.length;i++) {
+                        thread += '<p>' + messages[i].name + ': ' + messages[i].message + '<p>';
+                    }
+                    $('#messageBoard').append(thread);
+                });
+
+                $('#newMessage').submit(function() {
+                    socket.emit('newMessage', {message: $('#message').val(), user: curUser});
+                    $('#message').val('');
+                    return false;
+                });
+
+                socket.on('newMessagePost', function(data){
+                    $('#messageBoard').append('<p>' + data.user + ': ' + data.newMessage + '<p>');
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div id='error'></div>
+        <p>Welcome to the Eternity Glove War with names that cannot be sued by the Dorsney Corporation!  You may converse with anyone playing.  When you find an answer and type it in, you will gain a stone!  I mean rock!  Don't sue me, Welt Dusney!</p>
+        <h4>Trash talk central</h4>
+        <div id='messageBoard'></div>
+        <form id='newMessage'>
+            <input type='text' id='message' placeholder='enter your message here'>
+            <input type='submit' value='Send'>
+        </form>
+    </body>
+</html>
